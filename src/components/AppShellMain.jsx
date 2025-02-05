@@ -1,22 +1,22 @@
-import React from 'react';
-import { Tree, Group } from '@mantine/core';
+import React, { useState } from 'react';
+import { Tree, Group, Popover, TextInput } from '@mantine/core';
 import { fileData } from './../data/fileData';
 import classes from './Demo.module.css';
 import { Folder, FolderOpen, Ellipsis, Pencil, Trash } from 'lucide-react';
 import { CssIcon, NpmIcon, TypeScriptCircleIcon } from '@mantinex/dev-icons';
 import { Menu } from '@mantine/core';
-import { isFileFolderEdit } from './../redux/slices/FileExpoSlice';
+import { isFileFolderEdit, disableEdit } from './../redux/slices/FileExpoSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 function AppShellMain() {
   const dispatch = useDispatch();
-
+  const [opened, setOpened] = useState(false);
   const { isEdit } = useSelector((state) => state.file);
   console.log(isEdit);
 
-  const handleDeleteClick = (e , node, expanded, hasChildren) => {
-    e.stopPropagation()
-   
+  const handleDeleteClick = (e, node, expanded, hasChildren) => {
+    e.stopPropagation();
+    dispatch(disableEdit());
     console.log('clicked', node);
     console.log(expanded);
     console.log(hasChildren);
@@ -27,9 +27,10 @@ function AppShellMain() {
     fileData.splice(removeFile, 1);
   };
 
-  const handleEditClick = (e ,node, expanded, hasChildren) => {
-    console.log(e)
-    e.stopPropagation()
+  const handleEditClick = (e, node, expanded, hasChildren) => {
+    console.log(e);
+    e.stopPropagation();
+    setOpened((o) => !o);
     dispatch(isFileFolderEdit());
   };
   function FileIcon({ name, isFolder, expanded }) {
@@ -68,22 +69,25 @@ function AppShellMain() {
           isFolder={hasChildren}
           expanded={expanded}
         />
-        <span>{node.label}</span>
-        {isEdit && <input type="text" value={node.label} className='border-none underline' /> }
+        <span onClick={() => dispatch(disableEdit())}>{node.label}</span>
+        {isEdit && (
+          <TextInput placeholder="Name" size="xs" value={node.label} />
+        )}
+
         <Menu>
-          <Menu.Target >
-            <Ellipsis onClick={(e)=> e.stopPropagation()} />
+          <Menu.Target>
+            <Ellipsis onClick={(e) => e.stopPropagation()} />
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              onClick={(e) => handleEditClick(e ,node, expanded, hasChildren)}
+              onClick={(e) => handleEditClick(e, node, expanded, hasChildren)}
               leftIcon={<Pencil />}
             >
               Edit
             </Menu.Item>
             <Menu.Item
               leftIcon={<Trash />}
-              onClick={(e) => handleDeleteClick(e ,node, expanded, hasChildren)}
+              onClick={(e) => handleDeleteClick(e, node, expanded, hasChildren)}
               color="red"
             >
               Delete
